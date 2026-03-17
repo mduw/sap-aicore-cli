@@ -111,6 +111,16 @@ const entityModules: EntityModuleDefinition[] = [
     ],
     loader: () => import('./configurations'),
   },
+  {
+    commands: [
+      { name: 'get-scenario', description: 'Get scenario details', usage: 'get-scenario <id>' },
+      { name: 'list-scenario-versions', description: 'List versions of a scenario' },
+      { name: 'list-executables', description: 'List executables for a scenario' },
+      { name: 'get-executable', description: 'Get executable details', usage: 'get-executable <id>' },
+      { name: 'list-models', description: 'List models for a scenario' },
+    ],
+    loader: () => import('./scenarios-extended'),
+  },
 ];
 
 function registerEntityModules(): void {
