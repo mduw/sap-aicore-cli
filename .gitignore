@@ -21,3 +21,6 @@ resources
 # CDS
 .cdsrc-private.json
 templates/
+
+# Docs (specs/plans generated locally)
+docs/
