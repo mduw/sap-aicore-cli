@@ -146,6 +146,12 @@ const entityModules: EntityModuleDefinition[] = [
     ],
     loader: () => import('./metrics'),
   },
+  {
+    commands: [
+      { name: 'get-meta', description: 'Get AI Core service metadata and capabilities' },
+    ],
+    loader: () => import('./meta'),
+  },
 ];
 
 function registerEntityModules(): void {
