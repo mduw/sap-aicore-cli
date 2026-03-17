@@ -141,7 +141,7 @@ async function main(): Promise<void> {
   const commands = getCommandMetadata();
   for (const cmdMeta of commands) {
     cli.command(
-      cmdMeta.name,
+      cmdMeta.usage ?? cmdMeta.name,
       chalk.dim(cmdMeta.description),  // Dim the description to make command names stand out
       // builder function - will be called when this command is invoked
       async (yargs) => {
