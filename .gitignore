@@ -1,0 +1,23 @@
+node_modules/
+lib/
+dist-types/
+.scp/
+.vscode/
+
+# JetBrains IDE
+.idea/
+*.iml
+
+Makefile*.mta
+resources
+
+.DS_Store
+.env
+/.eslintcache
+
+# TypeScript
+*.tsbuildinfo
+
+# CDS
+.cdsrc-private.json
+templates/
