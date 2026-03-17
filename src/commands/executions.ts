@@ -252,6 +252,11 @@ class DeleteExecutionCommand implements CommandPlugin {
     const id = args.id as string;
     const resourceGroup = args.resourceGroup as string;
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would delete execution ${id}`);
+      return;
+    }
+
     if (!args.force) {
       logger.warn(
         `Warning: This will delete execution ${id}. Use --force to confirm.`,

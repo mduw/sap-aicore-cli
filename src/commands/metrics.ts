@@ -81,6 +81,11 @@ class DeleteMetricsCommand implements CommandPlugin {
     const executionId = args.executionId as string;
     const resourceGroup = args.resourceGroup as string;
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would delete metrics for execution ${executionId}`);
+      return;
+    }
+
     if (!args.force) {
       logger.warn(
         `Warning: This will delete all metrics for execution ${executionId}. Use --force to confirm.`,

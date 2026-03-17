@@ -220,6 +220,11 @@ class DeleteApplicationCommand implements CommandPlugin {
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const name = args.name as string;
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would delete application ${name}`);
+      return;
+    }
+
     if (!args.force) {
       logger.warn(
         `Warning: This will delete application ${name}. Use --force to confirm.`,

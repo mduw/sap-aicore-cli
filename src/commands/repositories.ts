@@ -218,6 +218,11 @@ class DeleteRepositoryCommand implements CommandPlugin {
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const name = args.name as string;
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would delete repository ${name}`);
+      return;
+    }
+
     if (!args.force) {
       logger.warn(
         `Warning: This will delete repository ${name}. Use --force to confirm.`,

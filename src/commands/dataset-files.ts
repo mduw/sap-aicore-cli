@@ -150,6 +150,11 @@ class DeleteDatasetFileCommand implements CommandPlugin {
     const remotePath = args.remotePath as string;
     const resourceGroup = args.resourceGroup as string;
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would delete dataset file at ${remotePath}`);
+      return;
+    }
+
     if (!args.force) {
       logger.warn(
         `Warning: This will delete file at ${remotePath}. Use --force to confirm.`,
