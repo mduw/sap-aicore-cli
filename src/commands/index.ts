@@ -183,6 +183,15 @@ const entityModules: EntityModuleDefinition[] = [
   },
   {
     commands: [
+      { name: 'list-object-store-secrets', description: 'List object store secrets' },
+      { name: 'create-object-store-secret', description: 'Create an object store secret' },
+      { name: 'update-object-store-secret', description: 'Update an object store secret', usage: 'update-object-store-secret <name>' },
+      { name: 'delete-object-store-secret', description: 'Delete an object store secret', usage: 'delete-object-store-secret <name>' },
+    ],
+    loader: () => import('./object-store-secrets'),
+  },
+  {
+    commands: [
       { name: 'upload-dataset-file', description: 'Upload a file to dataset storage' },
       { name: 'get-dataset-file', description: 'Download a file from dataset storage' },
       { name: 'delete-dataset-file', description: 'Delete a file from dataset storage' },
