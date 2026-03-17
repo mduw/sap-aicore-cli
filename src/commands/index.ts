@@ -103,6 +103,14 @@ const entityModules: EntityModuleDefinition[] = [
     ],
     loader: () => import('./executions'),
   },
+  {
+    commands: [
+      { name: 'list-configurations', description: 'List configurations' },
+      { name: 'get-configuration', description: 'Get configuration details', usage: 'get-configuration <id>' },
+      { name: 'create-configuration', description: 'Create a new configuration' },
+    ],
+    loader: () => import('./configurations'),
+  },
 ];
 
 function registerEntityModules(): void {
