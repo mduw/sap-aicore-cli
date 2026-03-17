@@ -192,6 +192,16 @@ const entityModules: EntityModuleDefinition[] = [
   },
   {
     commands: [
+      { name: 'list-secrets', description: 'List generic secrets' },
+      { name: 'get-secret', description: 'Get generic secret details', usage: 'get-secret <name>' },
+      { name: 'create-secret', description: 'Create a generic secret' },
+      { name: 'update-secret', description: 'Update a generic secret', usage: 'update-secret <name>' },
+      { name: 'delete-secret', description: 'Delete a generic secret', usage: 'delete-secret <name>' },
+    ],
+    loader: () => import('./generic-secrets'),
+  },
+  {
+    commands: [
       { name: 'upload-dataset-file', description: 'Upload a file to dataset storage' },
       { name: 'get-dataset-file', description: 'Download a file from dataset storage' },
       { name: 'delete-dataset-file', description: 'Delete a file from dataset storage' },
