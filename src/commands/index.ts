@@ -152,6 +152,14 @@ const entityModules: EntityModuleDefinition[] = [
     ],
     loader: () => import('./meta'),
   },
+  {
+    commands: [
+      { name: 'upload-dataset-file', description: 'Upload a file to dataset storage' },
+      { name: 'get-dataset-file', description: 'Download a file from dataset storage' },
+      { name: 'delete-dataset-file', description: 'Delete a file from dataset storage' },
+    ],
+    loader: () => import('./dataset-files'),
+  },
 ];
 
 function registerEntityModules(): void {
