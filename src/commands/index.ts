@@ -121,6 +121,14 @@ const entityModules: EntityModuleDefinition[] = [
     ],
     loader: () => import('./scenarios-extended'),
   },
+  {
+    commands: [
+      { name: 'list-artifacts', description: 'List artifacts' },
+      { name: 'get-artifact', description: 'Get artifact details', usage: 'get-artifact <id>' },
+      { name: 'create-artifact', description: 'Create a new artifact' },
+    ],
+    loader: () => import('./artifacts'),
+  },
 ];
 
 function registerEntityModules(): void {
