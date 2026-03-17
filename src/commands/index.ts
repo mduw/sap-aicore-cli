@@ -11,6 +11,7 @@ import type { CommandPlugin } from '../types/command';
 interface CommandMetadata {
   name: string;
   description: string;
+  usage?: string;
   loader: () => Promise<{ default: CommandPlugin }>;
 }
 
@@ -76,6 +77,35 @@ const commandRegistry: CommandMetadata[] = [
   }
 ];
 
+interface EntityModuleDefinition {
+  commands: Array<{ name: string; description: string; usage?: string }>;
+  loader: () => Promise<{ default: CommandPlugin[] }>;
+}
+
+const entityModules: EntityModuleDefinition[] = [];
+
+function registerEntityModules(): void {
+  for (const mod of entityModules) {
+    for (const cmd of mod.commands) {
+      commandRegistry.push({
+        name: cmd.name,
+        description: cmd.description,
+        usage: cmd.usage,
+        loader: async () => {
+          const module = await mod.loader();
+          const plugin = module.default.find((c: CommandPlugin) => c.name === cmd.name);
+          if (!plugin) {
+            throw new Error(`Command "${cmd.name}" not found in entity module`);
+          }
+          return { default: plugin };
+        },
+      });
+    }
+  }
+}
+
+registerEntityModules();
+
 /**
  * Get all command names (fast, no loading)
  */
@@ -86,8 +116,8 @@ export function getCommandNames(): string[] {
 /**
  * Get all command metadata (fast, for help display)
  */
-export function getCommandMetadata(): Array<{ name: string; description: string }> {
-  return commandRegistry.map(({ name, description }) => ({ name, description }));
+export function getCommandMetadata(): Array<{ name: string; description: string; usage?: string }> {
+  return commandRegistry.map(({ name, description, usage }) => ({ name, description, usage }));
 }
 
 /**
