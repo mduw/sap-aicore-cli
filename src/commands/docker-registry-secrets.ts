@@ -79,6 +79,11 @@ class CreateDockerSecretCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would create docker registry secret "${args.name}"`);
+      return;
+    }
+
     const result = await createDockerRegistrySecret(
       args.name as string,
       args.server as string,
@@ -135,6 +140,11 @@ class UpdateDockerSecretCommand implements CommandPlugin {
     const server = args.server as string;
     const username = args.username as string;
     const password = args.password as string;
+
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would update docker registry secret ${name}`);
+      return;
+    }
 
     const result = await updateDockerRegistrySecret(name, server, username, password);
 
