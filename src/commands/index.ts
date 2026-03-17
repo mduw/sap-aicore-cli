@@ -129,6 +129,16 @@ const entityModules: EntityModuleDefinition[] = [
     ],
     loader: () => import('./artifacts'),
   },
+  {
+    commands: [
+      { name: 'list-execution-schedules', description: 'List execution schedules' },
+      { name: 'get-execution-schedule', description: 'Get execution schedule details', usage: 'get-execution-schedule <id>' },
+      { name: 'create-execution-schedule', description: 'Create a new execution schedule' },
+      { name: 'update-execution-schedule', description: 'Update an execution schedule', usage: 'update-execution-schedule <id>' },
+      { name: 'delete-execution-schedule', description: 'Delete an execution schedule', usage: 'delete-execution-schedule <id>' },
+    ],
+    loader: () => import('./execution-schedules'),
+  },
 ];
 
 function registerEntityModules(): void {
