@@ -202,6 +202,16 @@ const entityModules: EntityModuleDefinition[] = [
   },
   {
     commands: [
+      { name: 'list-resource-groups', description: 'List resource groups' },
+      { name: 'get-resource-group', description: 'Get resource group details', usage: 'get-resource-group <id>' },
+      { name: 'create-resource-group', description: 'Create a resource group' },
+      { name: 'update-resource-group', description: 'Update a resource group', usage: 'update-resource-group <id>' },
+      { name: 'delete-resource-group', description: 'Delete a resource group', usage: 'delete-resource-group <id>' },
+    ],
+    loader: () => import('./resource-groups'),
+  },
+  {
+    commands: [
       { name: 'upload-dataset-file', description: 'Upload a file to dataset storage' },
       { name: 'get-dataset-file', description: 'Download a file from dataset storage' },
       { name: 'delete-dataset-file', description: 'Delete a file from dataset storage' },
