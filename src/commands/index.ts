@@ -93,6 +93,16 @@ const entityModules: EntityModuleDefinition[] = [
     ],
     loader: () => import('./deployments'),
   },
+  {
+    commands: [
+      { name: 'list-executions', description: 'List executions' },
+      { name: 'get-execution', description: 'Get execution details', usage: 'get-execution <id>' },
+      { name: 'create-execution', description: 'Create a new execution' },
+      { name: 'update-execution', description: 'Update an execution', usage: 'update-execution <id>' },
+      { name: 'delete-execution', description: 'Delete an execution', usage: 'delete-execution <id>' },
+    ],
+    loader: () => import('./executions'),
+  },
 ];
 
 function registerEntityModules(): void {
