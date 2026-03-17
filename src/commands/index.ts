@@ -212,6 +212,13 @@ const entityModules: EntityModuleDefinition[] = [
   },
   {
     commands: [
+      { name: 'list-services', description: 'List AI Core services' },
+      { name: 'get-service', description: 'Get service details', usage: 'get-service <name>' },
+    ],
+    loader: () => import('./services'),
+  },
+  {
+    commands: [
       { name: 'upload-dataset-file', description: 'Upload a file to dataset storage' },
       { name: 'get-dataset-file', description: 'Download a file from dataset storage' },
       { name: 'delete-dataset-file', description: 'Delete a file from dataset storage' },
