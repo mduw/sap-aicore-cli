@@ -139,6 +139,13 @@ const entityModules: EntityModuleDefinition[] = [
     ],
     loader: () => import('./execution-schedules'),
   },
+  {
+    commands: [
+      { name: 'list-metrics', description: 'List metrics' },
+      { name: 'delete-metrics', description: 'Delete metrics for an execution' },
+    ],
+    loader: () => import('./metrics'),
+  },
 ];
 
 function registerEntityModules(): void {
