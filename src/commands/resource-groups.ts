@@ -118,6 +118,11 @@ class CreateResourceGroupCommand implements CommandPlugin {
       }
     }
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would create resource group "${body.resourceGroupId}"`);
+      return;
+    }
+
     const result = await createResourceGroup(body);
 
     if (!result.success) {
@@ -167,6 +172,11 @@ class UpdateResourceGroupCommand implements CommandPlugin {
         logger.error('Invalid JSON for --labels');
         return;
       }
+    }
+
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would update resource group ${id}`);
+      return;
     }
 
     const result = await updateResourceGroup(id, body);

@@ -99,6 +99,11 @@ class CreateObjectStoreSecretCommand implements CommandPlugin {
     };
     const resourceGroup = args.resourceGroup as string | undefined;
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would create object store secret "${body.name}"`);
+      return;
+    }
+
     const result = await createObjectStoreSecret(body, resourceGroup);
 
     if (!result.success) {
@@ -158,6 +163,11 @@ class UpdateObjectStoreSecretCommand implements CommandPlugin {
       }
     }
     const resourceGroup = args.resourceGroup as string | undefined;
+
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would update object store secret ${name}`);
+      return;
+    }
 
     const result = await updateObjectStoreSecret(name, body, resourceGroup);
 

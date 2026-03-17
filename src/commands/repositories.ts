@@ -123,6 +123,11 @@ class CreateRepositoryCommand implements CommandPlugin {
       password: args.password as string,
     };
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would create repository "${body.name}"`);
+      return;
+    }
+
     const result = await createRepository(body);
 
     if (!result.success) {
@@ -175,6 +180,11 @@ class UpdateRepositoryCommand implements CommandPlugin {
     if (args.url) body.url = args.url;
     if (args.username) body.username = args.username;
     if (args.password) body.password = args.password;
+
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would update repository ${name}`);
+      return;
+    }
 
     const result = await updateRepository(name, body);
 

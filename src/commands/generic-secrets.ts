@@ -133,6 +133,11 @@ class CreateSecretCommand implements CommandPlugin {
     };
     const resourceGroup = args.resourceGroup as string | undefined;
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would create secret "${body.name}"`);
+      return;
+    }
+
     const result = await createGenericSecret(body, resourceGroup);
 
     if (!result.success) {
@@ -187,6 +192,12 @@ class UpdateSecretCommand implements CommandPlugin {
     }
 
     const resourceGroup = args.resourceGroup as string | undefined;
+
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would update secret ${name}`);
+      return;
+    }
+
     const result = await updateGenericSecret(name, { data }, resourceGroup);
 
     if (!result.success) {

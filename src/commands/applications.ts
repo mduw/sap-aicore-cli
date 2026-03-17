@@ -125,6 +125,11 @@ class CreateApplicationCommand implements CommandPlugin {
       path: args.path as string,
     };
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would create application "${body.applicationName}"`);
+      return;
+    }
+
     const result = await createApplication(body);
 
     if (!result.success) {
@@ -177,6 +182,11 @@ class UpdateApplicationCommand implements CommandPlugin {
     if (args.repoName) body.repositoryUrl = args.repoName;
     if (args.revision) body.revision = args.revision;
     if (args.path) body.path = args.path;
+
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would update application ${name}`);
+      return;
+    }
 
     const result = await updateApplication(name, body);
 
