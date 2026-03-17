@@ -174,6 +174,15 @@ const entityModules: EntityModuleDefinition[] = [
   },
   {
     commands: [
+      { name: 'list-docker-secrets', description: 'List Docker registry secrets' },
+      { name: 'create-docker-secret', description: 'Create a Docker registry secret' },
+      { name: 'update-docker-secret', description: 'Update a Docker registry secret', usage: 'update-docker-secret <name>' },
+      { name: 'delete-docker-secret', description: 'Delete a Docker registry secret', usage: 'delete-docker-secret <name>' },
+    ],
+    loader: () => import('./docker-registry-secrets'),
+  },
+  {
+    commands: [
       { name: 'upload-dataset-file', description: 'Upload a file to dataset storage' },
       { name: 'get-dataset-file', description: 'Download a file from dataset storage' },
       { name: 'delete-dataset-file', description: 'Delete a file from dataset storage' },
