@@ -164,6 +164,16 @@ const entityModules: EntityModuleDefinition[] = [
   },
   {
     commands: [
+      { name: 'list-applications', description: 'List ArgoCD applications' },
+      { name: 'get-application', description: 'Get application details', usage: 'get-application <name>' },
+      { name: 'create-application', description: 'Create an ArgoCD application' },
+      { name: 'update-application', description: 'Update an application', usage: 'update-application <name>' },
+      { name: 'delete-application', description: 'Delete an application', usage: 'delete-application <name>' },
+    ],
+    loader: () => import('./applications'),
+  },
+  {
+    commands: [
       { name: 'upload-dataset-file', description: 'Upload a file to dataset storage' },
       { name: 'get-dataset-file', description: 'Download a file from dataset storage' },
       { name: 'delete-dataset-file', description: 'Delete a file from dataset storage' },
