@@ -82,7 +82,18 @@ interface EntityModuleDefinition {
   loader: () => Promise<{ default: CommandPlugin[] }>;
 }
 
-const entityModules: EntityModuleDefinition[] = [];
+const entityModules: EntityModuleDefinition[] = [
+  {
+    commands: [
+      { name: 'list-deployments', description: 'List deployments' },
+      { name: 'get-deployment', description: 'Get deployment details', usage: 'get-deployment <id>' },
+      { name: 'create-deployment', description: 'Create a new deployment' },
+      { name: 'update-deployment', description: 'Update a deployment (e.g. stop/start)', usage: 'update-deployment <id>' },
+      { name: 'delete-deployment', description: 'Delete a deployment', usage: 'delete-deployment <id>' },
+    ],
+    loader: () => import('./deployments'),
+  },
+];
 
 function registerEntityModules(): void {
   for (const mod of entityModules) {
