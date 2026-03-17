@@ -210,6 +210,11 @@ class DeleteResourceGroupCommand implements CommandPlugin {
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const id = args.id as string;
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would delete resource group ${id}`);
+      return;
+    }
+
     if (!args.force) {
       logger.warn(
         `Warning: This will delete resource group ${id}. Use --force to confirm.`,

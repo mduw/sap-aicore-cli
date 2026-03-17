@@ -205,6 +205,11 @@ class DeleteObjectStoreSecretCommand implements CommandPlugin {
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const name = args.name as string;
 
+    if (args.dryRun) {
+      logger.info(`[Dry Run] Would delete object store secret ${name}`);
+      return;
+    }
+
     if (!args.force) {
       logger.warn(
         `Warning: This will delete object store secret ${name}. Use --force to confirm.`,
