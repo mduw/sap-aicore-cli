@@ -95,4 +95,46 @@ describe('command registry', () => {
     const cmd = await getCommand('nonexistent-command');
     expect(cmd).toBeUndefined();
   });
+
+  it('assigns a group to every command', () => {
+    const metadata = getCommandMetadata();
+    for (const cmd of metadata) {
+      expect(cmd.group, `Command ${cmd.name} missing group`).toBeDefined();
+      expect(cmd.group.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('groups commands into expected categories', () => {
+    const metadata = getCommandMetadata();
+    const groups = new Set(metadata.map(m => m.group));
+
+    const expectedGroups = [
+      'Setup', 'Prompt Templates', 'Deployments', 'Executions',
+      'Configurations', 'Scenarios & Models', 'Artifacts',
+      'Execution Schedules', 'Metrics', 'Meta', 'Dataset Files',
+      'Repositories', 'Applications', 'Docker Registry Secrets',
+      'Object Store Secrets', 'Generic Secrets', 'Resource Groups', 'Services',
+    ];
+
+    for (const group of expectedGroups) {
+      expect(groups, `Missing group: ${group}`).toContain(group);
+    }
+  });
+
+  it('groups setup commands together', () => {
+    const metadata = getCommandMetadata();
+    const setupCmds = metadata.filter(m => m.group === 'Setup').map(m => m.name);
+    expect(setupCmds).toContain('install');
+    expect(setupCmds).toContain('uninstall');
+    expect(setupCmds).toContain('setup');
+  });
+
+  it('groups deployment commands together', () => {
+    const metadata = getCommandMetadata();
+    const deployCmds = metadata.filter(m => m.group === 'Deployments').map(m => m.name);
+    expect(deployCmds).toEqual([
+      'list-deployments', 'get-deployment', 'create-deployment',
+      'update-deployment', 'delete-deployment',
+    ]);
+  });
 });

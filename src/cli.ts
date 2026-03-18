@@ -87,11 +87,40 @@ async function initializeConfig(): Promise<void> {
   configInitialized = true;
 }
 
+/**
+ * Build grouped command help text from command metadata.
+ */
+function buildGroupedHelp(commands: Array<{ name: string; description: string; group: string; usage?: string }>): string {
+  const groups = new Map<string, Array<{ usage: string; description: string }>>();
+
+  for (const cmd of commands) {
+    const group = cmd.group;
+    if (!groups.has(group)) groups.set(group, []);
+    groups.get(group)!.push({
+      usage: cmd.usage ?? cmd.name,
+      description: cmd.description,
+    });
+  }
+
+  let text = '';
+  for (const [group, cmds] of groups) {
+    text += `\n  ${chalk.yellow(group + ':')}\n`;
+    for (const cmd of cmds) {
+      const padded = ('saic-cli ' + cmd.usage).padEnd(46);
+      text += `    ${chalk.cyan(padded)} ${chalk.dim(cmd.description)}\n`;
+    }
+  }
+
+  return text;
+}
 
 /**
  * Main execution - Use yargs for routing and parsing
  */
 async function main(): Promise<void> {
+  const commands = getCommandMetadata();
+  const groupedHelp = buildGroupedHelp(commands);
+
   const cli = yargs(hideBin(process.argv))
     .scriptName('saic-cli')
     .version(VERSION)
@@ -99,8 +128,9 @@ async function main(): Promise<void> {
       `${chalk.cyan.bold('SAP AI Core CLI')} ${chalk.dim('v' + VERSION)}\n` +
       `${chalk.dim(DESCRIPTION)}\n\n` +
       `${chalk.yellow.bold('Usage:')}\n` +
-      `  ${chalk.cyan('$0')} ${chalk.green.bold('<command>')} ${chalk.dim('[options]')}\n\n` +
-      `${chalk.yellow.bold('Commands:')}`
+      `  ${chalk.cyan('saic-cli')} ${chalk.green.bold('<command>')} ${chalk.dim('[options]')}\n\n` +
+      `${chalk.yellow.bold('Commands:')}` +
+      groupedHelp
     )
     .option('debug', {
       describe: 'Enable debug logging',
@@ -133,26 +163,22 @@ async function main(): Promise<void> {
     .alias('help', 'h')
     .epilogue(
       `\n${chalk.dim('─'.repeat(60))}\n` +
-      `${chalk.cyan('ℹ')}  Use ${chalk.cyan.bold('saic-cli <command> --help')} for detailed command information\n` +
-      `${chalk.cyan('ℹ')}  Use ${chalk.cyan.bold('saic-cli <command> --examples')} to see usage examples`
+      `${chalk.cyan('ℹ')}  Use ${chalk.cyan.bold('saic-cli <command> --help')} for detailed command information`
     );
 
-  // Dynamically register all commands
-  const commands = getCommandMetadata();
+  // Register all commands with yargs (hidden from default help — we render our own)
   for (const cmdMeta of commands) {
     cli.command(
       cmdMeta.usage ?? cmdMeta.name,
-      chalk.dim(cmdMeta.description),  // Dim the description to make command names stand out
-      // builder function - will be called when this command is invoked
+      false as any, // false hides from yargs' default command list
+      // builder function
       async (yargs) => {
-        // Load the command plugin lazily
         const command = await getCommand(cmdMeta.name);
         if (!command) {
           logger.error(`Failed to load command: ${cmdMeta.name}`);
           process.exit(1);
         }
 
-        // If command has builder method, use it to define options
         if (command.builder) {
           return command.builder(yargs);
         }
@@ -161,17 +187,14 @@ async function main(): Promise<void> {
       // handler function
       async (argv) => {
         try {
-          // Initialize config/CDS only when actually running a command
           await initializeConfig();
 
-          // Load the command plugin lazily
           const command = await getCommand(cmdMeta.name);
           if (!command) {
             logger.error(`Failed to load command: ${cmdMeta.name}`);
             process.exit(1);
           }
 
-          // Run the command with parsed yargs
           await command.run(argv);
         } catch (error) {
           const err = error as Error;
