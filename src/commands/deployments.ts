@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import {
   listDeployments,
   getDeployment,
@@ -24,17 +25,13 @@ class ListDeploymentsCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('status', {
-        describe: 'Filter by deployment status',
+      .option('query', {
+        describe: 'Query parameters (JSON), e.g. \'{"status":"RUNNING","$top":10}\'',
         type: 'string',
       })
-      .option('top', {
-        describe: 'Maximum number of results',
-        type: 'number',
-      })
-      .option('skip', {
-        describe: 'Number of results to skip',
-        type: 'number',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -49,10 +46,8 @@ class ListDeploymentsCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const result = await listDeployments(
-      { status: args.status as any, $top: args.top as number, $skip: args.skip as number },
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { query, headers } = parseSdkParams(args);
+    const result = await listDeployments(query, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -80,6 +75,14 @@ class GetDeploymentCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
+      .option('query', {
+        describe: 'Query parameters (JSON)',
+        type: 'string',
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
+      })
       .option('resource-group', {
         describe: 'AI resource group',
         type: 'string',
@@ -94,11 +97,8 @@ class GetDeploymentCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const id = args.id as string;
-    const result = await getDeployment(
-      id,
-      {},
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { query, headers } = parseSdkParams(args);
+    const result = await getDeployment(id, query, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -119,10 +119,14 @@ class CreateDeploymentCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('config-id', {
-        describe: 'Configuration ID for the deployment',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"configurationId":"cfg-1"}\'',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -137,17 +141,13 @@ class CreateDeploymentCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const configId = args.configId as string;
-
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would create deployment with configuration: ${configId}`);
+      logger.info(`[Dry Run] Would create deployment with body: ${args.body}`);
       return;
     }
 
-    const result = await createDeployment(
-      { configurationId: configId },
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { body, headers } = parseSdkParams(args);
+    const result = await createDeployment(body, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -175,10 +175,14 @@ class UpdateDeploymentCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
-      .option('target-status', {
-        describe: 'Target status (e.g. STOPPED)',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"targetStatus":"STOPPED"}\'',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -194,18 +198,14 @@ class UpdateDeploymentCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const id = args.id as string;
-    const targetStatus = args.targetStatus as string;
 
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would update deployment ${id} to target status: ${targetStatus}`);
+      logger.info(`[Dry Run] Would update deployment ${id} with body: ${args.body}`);
       return;
     }
 
-    const result = await updateDeployment(
-      id,
-      { targetStatus } as any,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { body, headers } = parseSdkParams(args);
+    const result = await updateDeployment(id, body, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -231,6 +231,10 @@ class DeleteDeploymentCommand implements CommandPlugin {
         describe: 'Deployment ID',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -264,10 +268,8 @@ class DeleteDeploymentCommand implements CommandPlugin {
       return;
     }
 
-    const result = await deleteDeployment(
-      id,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { headers } = parseSdkParams(args);
+    const result = await deleteDeployment(id, headers);
 
     if (!result.success) {
       logger.error(result.error);

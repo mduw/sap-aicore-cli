@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import {
   listObjectStoreSecrets,
   createObjectStoreSecret,
@@ -21,17 +22,17 @@ class ListObjectStoreSecretsCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
+      .option('query', {
+        describe: 'Query parameters (JSON), e.g. \'{"$top":10}\'',
+        type: 'string',
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
+      })
       .option('resource-group', {
         describe: 'AI resource group',
         type: 'string',
-      })
-      .option('top', {
-        describe: 'Max results to return',
-        type: 'number',
-      })
-      .option('skip', {
-        describe: 'Results to skip (pagination)',
-        type: 'number',
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -41,11 +42,12 @@ class ListObjectStoreSecretsCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const resourceGroup = args.resourceGroup as string | undefined;
-    const headers = resourceGroup ? { 'AI-Resource-Group': resourceGroup } : undefined;
+    const { query, headers } = parseSdkParams(args);
+    const hasQuery = Object.keys(query).length > 0;
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await listObjectStoreSecrets(
-      { $top: args.top as number, $skip: args.skip as number },
-      headers,
+      hasQuery ? query : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {
@@ -69,20 +71,14 @@ class CreateObjectStoreSecretCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('name', {
-        describe: 'Object store secret name',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"name":"my-secret","type":"S3","data":{"bucket":"my-bucket"}}\'',
         type: 'string',
         demandOption: true,
       })
-      .option('type', {
-        describe: 'Storage type (e.g. S3, GCS)',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
-        demandOption: true,
-      })
-      .option('data', {
-        describe: 'Secret data as JSON string',
-        type: 'string',
-        demandOption: true,
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -96,29 +92,16 @@ class CreateObjectStoreSecretCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    let data: Record<string, any>;
-    try {
-      data = JSON.parse(args.data as string);
-    } catch {
-      logger.error('Invalid JSON for --data');
-      return;
-    }
-
-    const body = {
-      name: args.name as string,
-      type: args.type as string,
-      data,
-    };
-    const resourceGroup = args.resourceGroup as string | undefined;
-
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would create object store secret "${body.name}"`);
+      logger.info(`[Dry Run] Would create object store secret with body: ${args.body}`);
       return;
     }
 
+    const { body, headers } = parseSdkParams(args);
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await createObjectStoreSecret(
       body,
-      resourceGroup ? { 'AI-Resource-Group': resourceGroup } : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {
@@ -146,12 +129,13 @@ class UpdateObjectStoreSecretCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
-      .option('type', {
-        describe: 'Storage type (e.g. S3, GCS)',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"type":"S3","data":{"bucket":"new-bucket"}}\'',
         type: 'string',
+        demandOption: true,
       })
-      .option('data', {
-        describe: 'Secret data as JSON string',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
       })
       .option('resource-group', {
@@ -167,27 +151,18 @@ class UpdateObjectStoreSecretCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const name = args.name as string;
-    const body: any = { name };
-    if (args.type) body.type = args.type;
-    if (args.data) {
-      try {
-        body.data = JSON.parse(args.data as string);
-      } catch {
-        logger.error('Invalid JSON for --data');
-        return;
-      }
-    }
-    const resourceGroup = args.resourceGroup as string | undefined;
 
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would update object store secret ${name}`);
+      logger.info(`[Dry Run] Would update object store secret ${name} with body: ${args.body}`);
       return;
     }
 
+    const { body, headers } = parseSdkParams(args);
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await updateObjectStoreSecret(
       name,
       body,
-      resourceGroup ? { 'AI-Resource-Group': resourceGroup } : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {
@@ -214,6 +189,10 @@ class DeleteObjectStoreSecretCommand implements CommandPlugin {
         describe: 'Object store secret name',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -246,10 +225,11 @@ class DeleteObjectStoreSecretCommand implements CommandPlugin {
       return;
     }
 
-    const resourceGroup = args.resourceGroup as string | undefined;
+    const { headers } = parseSdkParams(args);
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await deleteObjectStoreSecret(
       name,
-      resourceGroup ? { 'AI-Resource-Group': resourceGroup } : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {

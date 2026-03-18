@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import {
   listDockerRegistrySecrets,
   createDockerRegistrySecret,
@@ -20,13 +21,13 @@ class ListDockerSecretsCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('top', {
-        describe: 'Max results to return',
-        type: 'number',
+      .option('query', {
+        describe: 'Query parameters (JSON), e.g. \'{"$top":10}\'',
+        type: 'string',
       })
-      .option('skip', {
-        describe: 'Results to skip (pagination)',
-        type: 'number',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -36,8 +37,12 @@ class ListDockerSecretsCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
+    const { query, headers } = parseSdkParams(args);
+    const hasQuery = Object.keys(query).length > 0;
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await listDockerRegistrySecrets(
-      { $top: args.top as number, $skip: args.skip as number },
+      hasQuery ? query : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {
@@ -56,40 +61,19 @@ class ListDockerSecretsCommand implements CommandPlugin {
   }
 }
 
-function buildDockerConfigJson(server: string, username: string, password: string): string {
-  const auth = Buffer.from(`${username}:${password}`).toString('base64');
-  const config = {
-    auths: {
-      [server]: { username, password, auth },
-    },
-  };
-  return JSON.stringify(config);
-}
-
 class CreateDockerSecretCommand implements CommandPlugin {
   readonly name = 'create-docker-secret';
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('name', {
-        describe: 'Docker registry secret name',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"name":"my-secret","data":{".dockerconfigjson":"..."}}\'',
         type: 'string',
         demandOption: true,
       })
-      .option('server', {
-        describe: 'Docker registry server URL',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
-        demandOption: true,
-      })
-      .option('username', {
-        describe: 'Docker registry username',
-        type: 'string',
-        demandOption: true,
-      })
-      .option('password', {
-        describe: 'Docker registry password',
-        type: 'string',
-        demandOption: true,
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -100,21 +84,12 @@ class CreateDockerSecretCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would create docker registry secret "${args.name}"`);
+      logger.info(`[Dry Run] Would create docker registry secret with body: ${args.body}`);
       return;
     }
 
-    const dockerConfigJson = buildDockerConfigJson(
-      args.server as string,
-      args.username as string,
-      args.password as string,
-    );
-    const result = await createDockerRegistrySecret(
-      {
-        name: args.name as string,
-        data: { '.dockerconfigjson': dockerConfigJson },
-      } as any,
-    );
+    const { body } = parseSdkParams(args);
+    const result = await createDockerRegistrySecret(body as any);
 
     if (!result.success) {
       logger.error(result.error);
@@ -141,16 +116,13 @@ class UpdateDockerSecretCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
-      .option('server', {
-        describe: 'Docker registry server URL',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"data":{".dockerconfigjson":"..."}}\'',
         type: 'string',
+        demandOption: true,
       })
-      .option('username', {
-        describe: 'Docker registry username',
-        type: 'string',
-      })
-      .option('password', {
-        describe: 'Docker registry password',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
       })
       .option('json', {
@@ -162,22 +134,14 @@ class UpdateDockerSecretCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const name = args.name as string;
-    const server = args.server as string;
-    const username = args.username as string;
-    const password = args.password as string;
 
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would update docker registry secret ${name}`);
+      logger.info(`[Dry Run] Would update docker registry secret ${name} with body: ${args.body}`);
       return;
     }
 
-    const dockerConfigJson = buildDockerConfigJson(server, username, password);
-    const result = await updateDockerRegistrySecret(
-      name,
-      {
-        data: { '.dockerconfigjson': dockerConfigJson },
-      },
-    );
+    const { body } = parseSdkParams(args);
+    const result = await updateDockerRegistrySecret(name, body);
 
     if (!result.success) {
       logger.error(result.error);
@@ -203,6 +167,10 @@ class DeleteDockerSecretCommand implements CommandPlugin {
         describe: 'Docker registry secret name',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('force', {
         describe: 'Skip confirmation warning',

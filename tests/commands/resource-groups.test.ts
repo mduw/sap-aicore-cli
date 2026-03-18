@@ -78,7 +78,7 @@ describe('resource-groups commands', () => {
 
     it('shows dry-run message and does not call API', async () => {
       await cmd.run({
-        id: 'rg-new',
+        body: '{"resourceGroupId":"rg-new"}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 
@@ -93,7 +93,7 @@ describe('resource-groups commands', () => {
       });
 
       await cmd.run({
-        id: 'rg-new',
+        body: '{"resourceGroupId":"rg-new"}',
         dryRun: false, json: false, _: [], $0: '',
       } as any);
 
@@ -107,7 +107,7 @@ describe('resource-groups commands', () => {
 
     it('shows dry-run message', async () => {
       await cmd.run({
-        id: 'rg1',
+        id: 'rg1', body: '{"labels":[]}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 

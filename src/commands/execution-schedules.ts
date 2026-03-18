@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import {
   listExecutionSchedules,
   getExecutionSchedule,
@@ -24,13 +25,13 @@ class ListExecutionSchedulesCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('top', {
-        describe: 'Maximum number of results',
-        type: 'number',
+      .option('query', {
+        describe: 'Query parameters (JSON), e.g. \'{"$top":10}\'',
+        type: 'string',
       })
-      .option('skip', {
-        describe: 'Number of results to skip',
-        type: 'number',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -45,10 +46,8 @@ class ListExecutionSchedulesCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const result = await listExecutionSchedules(
-      { $top: args.top as number, $skip: args.skip as number },
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { query, headers } = parseSdkParams(args);
+    const result = await listExecutionSchedules(query, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -76,6 +75,10 @@ class GetExecutionScheduleCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
+      })
       .option('resource-group', {
         describe: 'AI resource group',
         type: 'string',
@@ -90,10 +93,8 @@ class GetExecutionScheduleCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const id = args.id as string;
-    const result = await getExecutionSchedule(
-      id,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { headers } = parseSdkParams(args);
+    const result = await getExecutionSchedule(id, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -114,27 +115,13 @@ class CreateExecutionScheduleCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('config-id', {
-        describe: 'Configuration ID',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"configurationId":"cfg-1","cron":"0 * * * *","name":"my-schedule"}\'',
         type: 'string',
         demandOption: true,
       })
-      .option('cron', {
-        describe: 'Cron expression for the schedule',
-        type: 'string',
-        demandOption: true,
-      })
-      .option('name', {
-        describe: 'Schedule name',
-        type: 'string',
-        demandOption: true,
-      })
-      .option('start', {
-        describe: 'Start time (ISO 8601)',
-        type: 'string',
-      })
-      .option('end', {
-        describe: 'End time (ISO 8601)',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
       })
       .option('resource-group', {
@@ -150,23 +137,13 @@ class CreateExecutionScheduleCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const configId = args.configId as string;
-    const cron = args.cron as string;
-    const name = args.name as string;
-
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would create execution schedule "${name}" with cron: ${cron}`);
+      logger.info(`[Dry Run] Would create execution schedule with body: ${args.body}`);
       return;
     }
 
-    const body: any = { configurationId: configId, cron, name };
-    if (args.start) body.start = args.start;
-    if (args.end) body.end = args.end;
-
-    const result = await createExecutionSchedule(
-      body,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { body, headers } = parseSdkParams(args);
+    const result = await createExecutionSchedule(body, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -193,14 +170,14 @@ class UpdateExecutionScheduleCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
-      .option('cron', {
-        describe: 'New cron expression',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"cron":"0 */2 * * *","status":"ACTIVE"}\'',
         type: 'string',
+        demandOption: true,
       })
-      .option('status', {
-        describe: 'New status (ACTIVE or INACTIVE)',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
-        choices: ['ACTIVE', 'INACTIVE'],
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -218,19 +195,12 @@ class UpdateExecutionScheduleCommand implements CommandPlugin {
     const id = args.id as string;
 
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would update execution schedule ${id}`);
+      logger.info(`[Dry Run] Would update execution schedule ${id} with body: ${args.body}`);
       return;
     }
 
-    const body: any = {};
-    if (args.cron) body.cron = args.cron;
-    if (args.status) body.status = args.status;
-
-    const result = await updateExecutionSchedule(
-      id,
-      body,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { body, headers } = parseSdkParams(args);
+    const result = await updateExecutionSchedule(id, body, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -255,6 +225,10 @@ class DeleteExecutionScheduleCommand implements CommandPlugin {
         describe: 'Execution schedule ID',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -288,10 +262,8 @@ class DeleteExecutionScheduleCommand implements CommandPlugin {
       return;
     }
 
-    const result = await deleteExecutionSchedule(
-      id,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { headers } = parseSdkParams(args);
+    const result = await deleteExecutionSchedule(id, headers);
 
     if (!result.success) {
       logger.error(result.error);

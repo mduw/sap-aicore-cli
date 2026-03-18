@@ -81,7 +81,7 @@ describe('repository commands', () => {
 
     it('shows dry-run message and does not call API', async () => {
       await cmd.run({
-        name: 'repo1', url: 'https://github.com/test', username: 'user', password: 'pass',
+        body: '{"name":"repo1","url":"https://github.com/test","username":"user","password":"pass"}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 
@@ -96,7 +96,7 @@ describe('repository commands', () => {
       });
 
       await cmd.run({
-        name: 'repo1', url: 'https://github.com/test', username: 'user', password: 'pass',
+        body: '{"name":"repo1","url":"https://github.com/test","username":"user","password":"pass"}',
         dryRun: false, json: false, _: [], $0: '',
       } as any);
 
@@ -109,7 +109,7 @@ describe('repository commands', () => {
 
     it('shows dry-run message', async () => {
       await cmd.run({
-        name: 'repo1', url: 'https://new-url.com',
+        name: 'repo1', body: '{"url":"https://new-url.com"}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 

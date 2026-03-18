@@ -91,7 +91,7 @@ describe('deployment commands', () => {
     const cmd = findCommand('create-deployment');
 
     it('shows dry-run message and does not call API', async () => {
-      await cmd.run({ configId: 'cfg-1', resourceGroup: 'default', dryRun: true, json: false, _: [], $0: '' } as any);
+      await cmd.run({ body: '{"configurationId":"cfg-1"}', resourceGroup: 'default', dryRun: true, json: false, _: [], $0: '' } as any);
 
       expect(logOutput.some(l => l.includes('[Dry Run]') && l.includes('cfg-1'))).toBe(true);
       expect(mockCreateDeployment).not.toHaveBeenCalled();
@@ -103,7 +103,7 @@ describe('deployment commands', () => {
         data: { id: 'd-new', status: 'PENDING' },
       });
 
-      await cmd.run({ configId: 'cfg-1', resourceGroup: 'default', dryRun: false, json: false, _: [], $0: '' } as any);
+      await cmd.run({ body: '{"configurationId":"cfg-1"}', resourceGroup: 'default', dryRun: false, json: false, _: [], $0: '' } as any);
 
       expect(mockCreateDeployment).toHaveBeenCalledWith(
         { configurationId: 'cfg-1' },
@@ -153,7 +153,7 @@ describe('deployment commands', () => {
     const cmd = findCommand('update-deployment');
 
     it('shows dry-run message', async () => {
-      await cmd.run({ id: 'd1', targetStatus: 'STOPPED', resourceGroup: 'default', dryRun: true, json: false, _: [], $0: '' } as any);
+      await cmd.run({ id: 'd1', body: '{"targetStatus":"STOPPED"}', resourceGroup: 'default', dryRun: true, json: false, _: [], $0: '' } as any);
 
       expect(logOutput.some(l => l.includes('[Dry Run]') && l.includes('STOPPED'))).toBe(true);
       expect(mockUpdateDeployment).not.toHaveBeenCalled();

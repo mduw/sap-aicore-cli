@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import {
   listRepositories,
   getRepository,
@@ -22,13 +23,13 @@ class ListRepositoriesCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('top', {
-        describe: 'Max results to return',
-        type: 'number',
+      .option('query', {
+        describe: 'Query parameters (JSON), e.g. \'{"$top":10}\'',
+        type: 'string',
       })
-      .option('skip', {
-        describe: 'Results to skip (pagination)',
-        type: 'number',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -38,8 +39,12 @@ class ListRepositoriesCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
+    const { query, headers } = parseSdkParams(args);
+    const hasQuery = Object.keys(query).length > 0;
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await listRepositories(
-      { $top: args.top as number, $skip: args.skip as number },
+      hasQuery ? query : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {
@@ -67,6 +72,10 @@ class GetRepositoryCommand implements CommandPlugin {
         describe: 'Repository name',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -98,25 +107,14 @@ class CreateRepositoryCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('name', {
-        describe: 'Repository name',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"name":"repo1","url":"https://...","username":"user","password":"pass"}\'',
         type: 'string',
         demandOption: true,
       })
-      .option('url', {
-        describe: 'Repository URL',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
-        demandOption: true,
-      })
-      .option('username', {
-        describe: 'Repository username',
-        type: 'string',
-        demandOption: true,
-      })
-      .option('password', {
-        describe: 'Repository password',
-        type: 'string',
-        demandOption: true,
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -126,18 +124,12 @@ class CreateRepositoryCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const body = {
-      name: args.name as string,
-      url: args.url as string,
-      username: args.username as string,
-      password: args.password as string,
-    };
-
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would create repository "${body.name}"`);
+      logger.info(`[Dry Run] Would create repository with body: ${args.body}`);
       return;
     }
 
+    const { body } = parseSdkParams(args);
     const result = await createRepository(body);
 
     if (!result.success) {
@@ -165,16 +157,13 @@ class UpdateRepositoryCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
-      .option('url', {
-        describe: 'Repository URL',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"url":"https://...","username":"user","password":"pass"}\'',
         type: 'string',
+        demandOption: true,
       })
-      .option('username', {
-        describe: 'Repository username',
-        type: 'string',
-      })
-      .option('password', {
-        describe: 'Repository password',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
       })
       .option('json', {
@@ -186,16 +175,13 @@ class UpdateRepositoryCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const name = args.name as string;
-    const body: any = {};
-    if (args.url) body.url = args.url;
-    if (args.username) body.username = args.username;
-    if (args.password) body.password = args.password;
 
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would update repository ${name}`);
+      logger.info(`[Dry Run] Would update repository ${name} with body: ${args.body}`);
       return;
     }
 
+    const { body } = parseSdkParams(args);
     const result = await updateRepository(name, body);
 
     if (!result.success) {
@@ -222,6 +208,10 @@ class DeleteRepositoryCommand implements CommandPlugin {
         describe: 'Repository name',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('force', {
         describe: 'Skip confirmation warning',

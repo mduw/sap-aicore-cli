@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import {
   listArtifacts,
   getArtifact,
@@ -22,22 +23,13 @@ class ListArtifactsCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('scenario-id', {
-        describe: 'Filter by scenario ID',
+      .option('query', {
+        describe: 'Query parameters (JSON), e.g. \'{"scenarioId":"s1","kind":"model","$top":10}\'',
         type: 'string',
       })
-      .option('kind', {
-        describe: 'Filter by artifact kind',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
-        choices: ['model', 'dataset', 'resultset', 'other'],
-      })
-      .option('top', {
-        describe: 'Maximum number of results',
-        type: 'number',
-      })
-      .option('skip', {
-        describe: 'Number of results to skip',
-        type: 'number',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -52,10 +44,8 @@ class ListArtifactsCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const result = await listArtifacts(
-      { scenarioId: args.scenarioId as string, kind: args.kind as any, $top: args.top as number, $skip: args.skip as number },
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { query, headers } = parseSdkParams(args);
+    const result = await listArtifacts(query, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -83,6 +73,14 @@ class GetArtifactCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
+      .option('query', {
+        describe: 'Query parameters (JSON)',
+        type: 'string',
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
+      })
       .option('resource-group', {
         describe: 'AI resource group',
         type: 'string',
@@ -97,11 +95,8 @@ class GetArtifactCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const id = args.id as string;
-    const result = await getArtifact(
-      id,
-      {},
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { query, headers } = parseSdkParams(args);
+    const result = await getArtifact(id, query, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -122,33 +117,13 @@ class CreateArtifactCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('name', {
-        describe: 'Artifact name',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"name":"my-artifact","kind":"model","url":"ai://default/path","scenarioId":"s1"}\'',
         type: 'string',
         demandOption: true,
       })
-      .option('kind', {
-        describe: 'Artifact kind',
-        type: 'string',
-        choices: ['model', 'dataset', 'resultset', 'other'],
-        demandOption: true,
-      })
-      .option('url', {
-        describe: 'Artifact URL',
-        type: 'string',
-        demandOption: true,
-      })
-      .option('scenario-id', {
-        describe: 'Scenario ID',
-        type: 'string',
-        demandOption: true,
-      })
-      .option('description', {
-        describe: 'Artifact description',
-        type: 'string',
-      })
-      .option('labels', {
-        describe: 'Labels as JSON string (array of {key, value})',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
       })
       .option('resource-group', {
@@ -164,34 +139,13 @@ class CreateArtifactCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const name = args.name as string;
-    const kind = args.kind as string;
-    const url = args.url as string;
-    const scenarioId = args.scenarioId as string;
-
-    let labels: Array<{ key: string; value: string }> | undefined;
-    if (args.labels) {
-      try {
-        labels = JSON.parse(args.labels as string);
-      } catch {
-        logger.error('Invalid JSON for --labels');
-        return;
-      }
-    }
-
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would create artifact "${name}" (${kind}) for scenario ${scenarioId}`);
+      logger.info(`[Dry Run] Would create artifact with body: ${args.body}`);
       return;
     }
 
-    const body: any = { name, kind, url, scenarioId };
-    if (args.description) body.description = args.description;
-    if (labels) body.labels = labels;
-
-    const result = await createArtifact(
-      body,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { body, headers } = parseSdkParams(args);
+    const result = await createArtifact(body, headers);
 
     if (!result.success) {
       logger.error(result.error);

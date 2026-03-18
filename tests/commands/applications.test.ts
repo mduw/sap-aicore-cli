@@ -78,7 +78,7 @@ describe('application commands', () => {
 
     it('shows dry-run message and does not call API', async () => {
       await cmd.run({
-        name: 'app1', repoName: 'https://github.com/test', revision: 'main', path: 'workflows',
+        body: '{"applicationName":"app1","repositoryUrl":"https://github.com/test","revision":"main","path":"workflows"}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 
@@ -93,7 +93,7 @@ describe('application commands', () => {
       });
 
       await cmd.run({
-        name: 'app1', repoName: 'https://github.com/test', revision: 'main', path: 'workflows',
+        body: '{"applicationName":"app1","repositoryUrl":"https://github.com/test","revision":"main","path":"workflows"}',
         dryRun: false, json: false, _: [], $0: '',
       } as any);
 
@@ -106,7 +106,7 @@ describe('application commands', () => {
 
     it('shows dry-run message', async () => {
       await cmd.run({
-        name: 'app1', revision: 'develop',
+        name: 'app1', body: '{"revision":"develop"}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 

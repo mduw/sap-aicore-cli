@@ -80,7 +80,7 @@ describe('artifact commands', () => {
 
     it('shows dry-run message and does not call API', async () => {
       await cmd.run({
-        name: 'my-artifact', kind: 'model', url: 'ai://default/path', scenarioId: 'scenario-1',
+        body: '{"name":"my-artifact","kind":"model","url":"ai://default/path","scenarioId":"scenario-1"}',
         resourceGroup: 'default', dryRun: true, json: false, _: [], $0: '',
       } as any);
 
@@ -95,7 +95,7 @@ describe('artifact commands', () => {
       });
 
       await cmd.run({
-        name: 'my-artifact', kind: 'model', url: 'ai://default/path', scenarioId: 'scenario-1',
+        body: '{"name":"my-artifact","kind":"model","url":"ai://default/path","scenarioId":"scenario-1"}',
         resourceGroup: 'default', dryRun: false, json: false, _: [], $0: '',
       } as any);
 

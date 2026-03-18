@@ -78,7 +78,7 @@ describe('execution-schedule commands', () => {
 
     it('shows dry-run message and does not call API', async () => {
       await cmd.run({
-        configId: 'cfg-1', cron: '0 * * * *', name: 'my-schedule',
+        body: '{"configurationId":"cfg-1","cron":"0 * * * *","name":"my-schedule"}',
         resourceGroup: 'default', dryRun: true, json: false, _: [], $0: '',
       } as any);
 
@@ -93,7 +93,7 @@ describe('execution-schedule commands', () => {
       });
 
       await cmd.run({
-        configId: 'cfg-1', cron: '0 * * * *', name: 'my-schedule',
+        body: '{"configurationId":"cfg-1","cron":"0 * * * *","name":"my-schedule"}',
         resourceGroup: 'default', dryRun: false, json: false, _: [], $0: '',
       } as any);
 
@@ -106,7 +106,7 @@ describe('execution-schedule commands', () => {
     const cmd = findCommand('update-execution-schedule');
 
     it('shows dry-run message', async () => {
-      await cmd.run({ id: 'es1', resourceGroup: 'default', dryRun: true, json: false, _: [], $0: '' } as any);
+      await cmd.run({ id: 'es1', body: '{"status":"ACTIVE"}', resourceGroup: 'default', dryRun: true, json: false, _: [], $0: '' } as any);
 
       expect(logOutput.some(l => l.includes('[Dry Run]') && l.includes('es1'))).toBe(true);
       expect(mockUpdateExecutionSchedule).not.toHaveBeenCalled();

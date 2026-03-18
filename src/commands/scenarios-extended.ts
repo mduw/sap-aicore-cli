@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import { getScenario, listScenarioVersions, listModels } from '../api/scenarios.js';
 import { listExecutables, getExecutable } from '../api/executables.js';
 
@@ -41,6 +42,10 @@ class GetScenarioCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
+      })
       .option('resource-group', {
         describe: 'AI resource group',
         type: 'string',
@@ -55,10 +60,8 @@ class GetScenarioCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const id = args.id as string;
-    const result = await getScenario(
-      id,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { headers } = parseSdkParams(args);
+    const result = await getScenario(id, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -80,9 +83,17 @@ class ListScenarioVersionsCommand implements CommandPlugin {
   builder(yargs: Argv): Argv {
     return yargs
       .option('scenario-id', {
-        describe: 'Scenario ID',
+        describe: 'Scenario ID (path parameter)',
         type: 'string',
         demandOption: true,
+      })
+      .option('query', {
+        describe: 'Query parameters (JSON)',
+        type: 'string',
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -98,11 +109,8 @@ class ListScenarioVersionsCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const scenarioId = args.scenarioId as string;
-    const result = await listScenarioVersions(
-      scenarioId,
-      {},
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { query, headers } = parseSdkParams(args);
+    const result = await listScenarioVersions(scenarioId, query, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -126,9 +134,17 @@ class ListExecutablesCommand implements CommandPlugin {
   builder(yargs: Argv): Argv {
     return yargs
       .option('scenario-id', {
-        describe: 'Scenario ID',
+        describe: 'Scenario ID (path parameter)',
         type: 'string',
         demandOption: true,
+      })
+      .option('query', {
+        describe: 'Query parameters (JSON)',
+        type: 'string',
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -144,11 +160,8 @@ class ListExecutablesCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const scenarioId = args.scenarioId as string;
-    const result = await listExecutables(
-      scenarioId,
-      {},
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { query, headers } = parseSdkParams(args);
+    const result = await listExecutables(scenarioId, query, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -177,9 +190,13 @@ class GetExecutableCommand implements CommandPlugin {
         demandOption: true,
       })
       .option('scenario-id', {
-        describe: 'Scenario ID',
+        describe: 'Scenario ID (path parameter)',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -196,11 +213,8 @@ class GetExecutableCommand implements CommandPlugin {
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const id = args.id as string;
     const scenarioId = args.scenarioId as string;
-    const result = await getExecutable(
-      scenarioId,
-      id,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { headers } = parseSdkParams(args);
+    const result = await getExecutable(scenarioId, id, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -222,9 +236,13 @@ class ListModelsCommand implements CommandPlugin {
   builder(yargs: Argv): Argv {
     return yargs
       .option('scenario-id', {
-        describe: 'Scenario ID',
+        describe: 'Scenario ID (path parameter)',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -240,10 +258,8 @@ class ListModelsCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const scenarioId = args.scenarioId as string;
-    const result = await listModels(
-      scenarioId,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { headers } = parseSdkParams(args);
+    const result = await listModels(scenarioId, headers);
 
     if (!result.success) {
       logger.error(result.error);

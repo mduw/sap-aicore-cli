@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import {
   listConfigurations,
   getConfiguration,
@@ -22,17 +23,13 @@ class ListConfigurationsCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('scenario-id', {
-        describe: 'Filter by scenario ID',
+      .option('query', {
+        describe: 'Query parameters (JSON), e.g. \'{"scenarioId":"s1","$top":10}\'',
         type: 'string',
       })
-      .option('top', {
-        describe: 'Maximum number of results',
-        type: 'number',
-      })
-      .option('skip', {
-        describe: 'Number of results to skip',
-        type: 'number',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -47,10 +44,8 @@ class ListConfigurationsCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const result = await listConfigurations(
-      { scenarioId: args.scenarioId as string, $top: args.top as number, $skip: args.skip as number },
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { query, headers } = parseSdkParams(args);
+    const result = await listConfigurations(query, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -78,6 +73,14 @@ class GetConfigurationCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
+      .option('query', {
+        describe: 'Query parameters (JSON)',
+        type: 'string',
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
+      })
       .option('resource-group', {
         describe: 'AI resource group',
         type: 'string',
@@ -92,11 +95,8 @@ class GetConfigurationCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const id = args.id as string;
-    const result = await getConfiguration(
-      id,
-      {},
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { query, headers } = parseSdkParams(args);
+    const result = await getConfiguration(id, query, headers);
 
     if (!result.success) {
       logger.error(result.error);
@@ -117,27 +117,13 @@ class CreateConfigurationCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('name', {
-        describe: 'Configuration name',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"name":"my-config","executableId":"exec-1","scenarioId":"s1"}\'',
         type: 'string',
         demandOption: true,
       })
-      .option('executable-id', {
-        describe: 'Executable ID',
-        type: 'string',
-        demandOption: true,
-      })
-      .option('scenario-id', {
-        describe: 'Scenario ID',
-        type: 'string',
-        demandOption: true,
-      })
-      .option('params', {
-        describe: 'Parameter bindings as JSON string (array of {key, value})',
-        type: 'string',
-      })
-      .option('input-artifacts', {
-        describe: 'Input artifact bindings as JSON string (array of {key, artifactId})',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
       })
       .option('resource-group', {
@@ -153,44 +139,13 @@ class CreateConfigurationCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const name = args.name as string;
-    const executableId = args.executableId as string;
-    const scenarioId = args.scenarioId as string;
-
-    let parameterBindings: Array<{ key: string; value: string }> | undefined;
-    let inputArtifactBindings: Array<{ key: string; artifactId: string }> | undefined;
-
-    if (args.params) {
-      try {
-        parameterBindings = JSON.parse(args.params as string);
-      } catch {
-        logger.error('Invalid JSON for --params');
-        return;
-      }
-    }
-
-    if (args.inputArtifacts) {
-      try {
-        inputArtifactBindings = JSON.parse(args.inputArtifacts as string);
-      } catch {
-        logger.error('Invalid JSON for --input-artifacts');
-        return;
-      }
-    }
-
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would create configuration "${name}" for scenario ${scenarioId}`);
+      logger.info(`[Dry Run] Would create configuration with body: ${args.body}`);
       return;
     }
 
-    const body: any = { name, executableId, scenarioId };
-    if (parameterBindings) body.parameterBindings = parameterBindings;
-    if (inputArtifactBindings) body.inputArtifactBindings = inputArtifactBindings;
-
-    const result = await createConfiguration(
-      body,
-      { 'AI-Resource-Group': args.resourceGroup as string },
-    );
+    const { body, headers } = parseSdkParams(args);
+    const result = await createConfiguration(body, headers);
 
     if (!result.success) {
       logger.error(result.error);

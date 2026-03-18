@@ -78,7 +78,7 @@ describe('generic-secrets commands', () => {
 
     it('shows dry-run message and does not call API', async () => {
       await cmd.run({
-        name: 'my-secret', data: '{"key":"value"}',
+        body: '{"name":"my-secret","data":{"key":"value"}}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 
@@ -93,7 +93,7 @@ describe('generic-secrets commands', () => {
       });
 
       await cmd.run({
-        name: 'my-secret', data: '{"key":"value"}',
+        body: '{"name":"my-secret","data":{"key":"value"}}',
         dryRun: false, json: false, _: [], $0: '',
       } as any);
 
@@ -107,7 +107,7 @@ describe('generic-secrets commands', () => {
 
     it('shows dry-run message', async () => {
       await cmd.run({
-        name: 'my-secret', data: '{"key":"new-value"}',
+        name: 'my-secret', body: '{"data":{"key":"new-value"}}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 

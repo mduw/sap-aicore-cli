@@ -76,7 +76,7 @@ describe('object-store-secrets commands', () => {
 
     it('shows dry-run message and does not call API', async () => {
       await cmd.run({
-        name: 'my-secret', type: 'S3', data: '{"bucket":"my-bucket"}',
+        body: '{"name":"my-secret","type":"S3","data":{"bucket":"my-bucket"}}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 
@@ -91,7 +91,7 @@ describe('object-store-secrets commands', () => {
       });
 
       await cmd.run({
-        name: 'my-secret', type: 'S3', data: '{"bucket":"my-bucket"}',
+        body: '{"name":"my-secret","type":"S3","data":{"bucket":"my-bucket"}}',
         dryRun: false, json: false, _: [], $0: '',
       } as any);
 
@@ -104,7 +104,7 @@ describe('object-store-secrets commands', () => {
 
     it('shows dry-run message', async () => {
       await cmd.run({
-        name: 'my-secret', type: 'S3',
+        name: 'my-secret', body: '{"type":"S3"}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 

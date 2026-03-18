@@ -63,14 +63,14 @@ describe('metrics commands', () => {
     const cmd = findCommand('delete-metrics');
 
     it('shows dry-run message and does not call API', async () => {
-      await cmd.run({ executionId: 'e1', resourceGroup: 'default', dryRun: true, force: false, json: false, _: [], $0: '' } as any);
+      await cmd.run({ query: '{"executionId":"e1"}', resourceGroup: 'default', dryRun: true, force: false, json: false, _: [], $0: '' } as any);
 
       expect(logOutput.some(l => l.includes('[Dry Run]') && l.includes('e1'))).toBe(true);
       expect(mockDeleteMetrics).not.toHaveBeenCalled();
     });
 
     it('shows force warning when --force is not set', async () => {
-      await cmd.run({ executionId: 'e1', resourceGroup: 'default', dryRun: false, force: false, json: false, _: [], $0: '' } as any);
+      await cmd.run({ query: '{"executionId":"e1"}', resourceGroup: 'default', dryRun: false, force: false, json: false, _: [], $0: '' } as any);
 
       expect(warnOutput.some(l => l.includes('--force'))).toBe(true);
       expect(mockDeleteMetrics).not.toHaveBeenCalled();
@@ -79,12 +79,19 @@ describe('metrics commands', () => {
     it('calls API when --force is set', async () => {
       mockDeleteMetrics.mockResolvedValueOnce({ success: true, data: { message: 'OK' } });
 
-      await cmd.run({ executionId: 'e1', resourceGroup: 'default', dryRun: false, force: true, json: false, _: [], $0: '' } as any);
+      await cmd.run({ query: '{"executionId":"e1"}', resourceGroup: 'default', dryRun: false, force: true, json: false, _: [], $0: '' } as any);
 
       expect(mockDeleteMetrics).toHaveBeenCalledWith(
         { executionId: 'e1' },
         { 'AI-Resource-Group': 'default' },
       );
+    });
+
+    it('shows error when executionId is missing from query', async () => {
+      await cmd.run({ query: '{}', resourceGroup: 'default', dryRun: false, force: true, json: false, _: [], $0: '' } as any);
+
+      expect(errorOutput.some(l => l.includes('executionId'))).toBe(true);
+      expect(mockDeleteMetrics).not.toHaveBeenCalled();
     });
   });
 });

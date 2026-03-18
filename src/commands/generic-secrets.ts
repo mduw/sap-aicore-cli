@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import {
   listGenericSecrets,
   getGenericSecret,
@@ -21,17 +22,17 @@ class ListSecretsCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
+      .option('query', {
+        describe: 'Query parameters (JSON), e.g. \'{"$top":10}\'',
+        type: 'string',
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
+      })
       .option('resource-group', {
         describe: 'AI resource group',
         type: 'string',
-      })
-      .option('top', {
-        describe: 'Max results to return',
-        type: 'number',
-      })
-      .option('skip', {
-        describe: 'Results to skip (pagination)',
-        type: 'number',
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -41,11 +42,12 @@ class ListSecretsCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const resourceGroup = args.resourceGroup as string | undefined;
-    const headers = resourceGroup ? { 'AI-Resource-Group': resourceGroup } : undefined;
+    const { query, headers } = parseSdkParams(args);
+    const hasQuery = Object.keys(query).length > 0;
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await listGenericSecrets(
-      { $top: args.top as number, $skip: args.skip as number },
-      headers,
+      hasQuery ? query : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {
@@ -74,6 +76,10 @@ class GetSecretCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
+      })
       .option('resource-group', {
         describe: 'AI resource group',
         type: 'string',
@@ -87,9 +93,9 @@ class GetSecretCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const name = args.name as string;
-    const resourceGroup = args.resourceGroup as string | undefined;
-    const headers = resourceGroup ? { 'AI-Resource-Group': resourceGroup } : undefined;
-    const result = await getGenericSecret(name, headers);
+    const { headers } = parseSdkParams(args);
+    const hasHeaders = Object.keys(headers).length > 0;
+    const result = await getGenericSecret(name, hasHeaders ? headers : undefined);
 
     if (!result.success) {
       logger.error(result.error);
@@ -110,15 +116,14 @@ class CreateSecretCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('name', {
-        describe: 'Secret name',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"name":"my-secret","data":{"key":"value"}}\'',
         type: 'string',
         demandOption: true,
       })
-      .option('data', {
-        describe: 'Secret data as JSON string',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
-        demandOption: true,
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -132,28 +137,16 @@ class CreateSecretCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    let data: Record<string, any>;
-    try {
-      data = JSON.parse(args.data as string);
-    } catch {
-      logger.error('Invalid JSON for --data');
-      return;
-    }
-
-    const body = {
-      name: args.name as string,
-      data,
-    };
-    const resourceGroup = args.resourceGroup as string | undefined;
-
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would create secret "${body.name}"`);
+      logger.info(`[Dry Run] Would create secret with body: ${args.body}`);
       return;
     }
 
+    const { body, headers } = parseSdkParams(args);
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await createGenericSecret(
       body,
-      resourceGroup ? { 'AI-Resource-Group': resourceGroup } : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {
@@ -167,7 +160,7 @@ class CreateSecretCommand implements CommandPlugin {
     }
 
     logger.success('Secret created successfully.');
-    logger.info(`Name: ${result.data.name ?? args.name}`);
+    logger.info(`Name: ${result.data.name ?? 'OK'}`);
   }
 }
 
@@ -181,10 +174,14 @@ class UpdateSecretCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
-      .option('data', {
-        describe: 'Secret data as JSON string',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"data":{"key":"new-value"}}\'',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -199,25 +196,18 @@ class UpdateSecretCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const name = args.name as string;
-    let data: Record<string, any>;
-    try {
-      data = JSON.parse(args.data as string);
-    } catch {
-      logger.error('Invalid JSON for --data');
-      return;
-    }
-
-    const resourceGroup = args.resourceGroup as string | undefined;
 
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would update secret ${name}`);
+      logger.info(`[Dry Run] Would update secret ${name} with body: ${args.body}`);
       return;
     }
 
+    const { body, headers } = parseSdkParams(args);
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await updateGenericSecret(
       name,
-      { data },
-      resourceGroup ? { 'AI-Resource-Group': resourceGroup } : undefined,
+      body,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {
@@ -243,6 +233,10 @@ class DeleteSecretCommand implements CommandPlugin {
         describe: 'Secret name',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('resource-group', {
         describe: 'AI resource group',
@@ -275,10 +269,11 @@ class DeleteSecretCommand implements CommandPlugin {
       return;
     }
 
-    const resourceGroup = args.resourceGroup as string | undefined;
+    const { headers } = parseSdkParams(args);
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await deleteGenericSecret(
       name,
-      resourceGroup ? { 'AI-Resource-Group': resourceGroup } : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {

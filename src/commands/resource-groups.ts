@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import {
   listResourceGroups,
   getResourceGroup,
@@ -22,13 +23,13 @@ class ListResourceGroupsCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('top', {
-        describe: 'Max results to return',
-        type: 'number',
+      .option('query', {
+        describe: 'Query parameters (JSON), e.g. \'{"$top":10}\'',
+        type: 'string',
       })
-      .option('skip', {
-        describe: 'Results to skip (pagination)',
-        type: 'number',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -38,8 +39,12 @@ class ListResourceGroupsCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
+    const { query, headers } = parseSdkParams(args);
+    const hasQuery = Object.keys(query).length > 0;
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await listResourceGroups(
-      { $top: args.top as number, $skip: args.skip as number },
+      hasQuery ? query : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {
@@ -67,6 +72,10 @@ class GetResourceGroupCommand implements CommandPlugin {
         describe: 'Resource group ID',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -98,13 +107,13 @@ class CreateResourceGroupCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('id', {
-        describe: 'Resource group ID',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"resourceGroupId":"rg-new","labels":[{"key":"k","value":"v"}]}\'',
         type: 'string',
         demandOption: true,
       })
-      .option('labels', {
-        describe: 'Labels as JSON string (array of {key, value} objects)',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
       })
       .option('json', {
@@ -115,24 +124,12 @@ class CreateResourceGroupCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const body: any = {
-      resourceGroupId: args.id as string,
-    };
-
-    if (args.labels) {
-      try {
-        body.labels = JSON.parse(args.labels as string);
-      } catch {
-        logger.error('Invalid JSON for --labels');
-        return;
-      }
-    }
-
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would create resource group "${body.resourceGroupId}"`);
+      logger.info(`[Dry Run] Would create resource group with body: ${args.body}`);
       return;
     }
 
+    const { body } = parseSdkParams(args);
     const result = await createResourceGroup(body);
 
     if (!result.success) {
@@ -146,7 +143,7 @@ class CreateResourceGroupCommand implements CommandPlugin {
     }
 
     logger.success('Resource group created successfully.');
-    logger.info(`ID: ${result.data.resourceGroupId ?? args.id}`);
+    logger.info(`ID: ${result.data.resourceGroupId ?? 'OK'}`);
   }
 }
 
@@ -160,8 +157,13 @@ class UpdateResourceGroupCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
-      .option('labels', {
-        describe: 'Labels as JSON string (array of {key, value} objects)',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"labels":[{"key":"k","value":"v"}]}\'',
+        type: 'string',
+        demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
       })
       .option('json', {
@@ -173,22 +175,13 @@ class UpdateResourceGroupCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const id = args.id as string;
-    const body: any = {};
-
-    if (args.labels) {
-      try {
-        body.labels = JSON.parse(args.labels as string);
-      } catch {
-        logger.error('Invalid JSON for --labels');
-        return;
-      }
-    }
 
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would update resource group ${id}`);
+      logger.info(`[Dry Run] Would update resource group ${id} with body: ${args.body}`);
       return;
     }
 
+    const { body } = parseSdkParams(args);
     const result = await updateResourceGroup(id, body);
 
     if (!result.success) {
@@ -214,6 +207,10 @@ class DeleteResourceGroupCommand implements CommandPlugin {
         describe: 'Resource group ID',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('force', {
         describe: 'Skip confirmation warning',

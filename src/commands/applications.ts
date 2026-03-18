@@ -3,6 +3,7 @@ import type { CommandPlugin } from '../types/command.js';
 import type { Column } from '../utils/table-formatter.js';
 import { formatTable } from '../utils/table-formatter.js';
 import { logger } from '../utils/logger.js';
+import { parseSdkParams } from '../utils/sdk-params.js';
 import {
   listApplications,
   getApplication,
@@ -24,13 +25,13 @@ class ListApplicationsCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('top', {
-        describe: 'Max results to return',
-        type: 'number',
+      .option('query', {
+        describe: 'Query parameters (JSON), e.g. \'{"$top":10}\'',
+        type: 'string',
       })
-      .option('skip', {
-        describe: 'Results to skip (pagination)',
-        type: 'number',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -40,8 +41,12 @@ class ListApplicationsCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
+    const { query, headers } = parseSdkParams(args);
+    const hasQuery = Object.keys(query).length > 0;
+    const hasHeaders = Object.keys(headers).length > 0;
     const result = await listApplications(
-      { $top: args.top as number, $skip: args.skip as number },
+      hasQuery ? query : undefined,
+      hasHeaders ? headers : undefined,
     );
 
     if (!result.success) {
@@ -69,6 +74,10 @@ class GetApplicationCommand implements CommandPlugin {
         describe: 'Application name',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -100,25 +109,14 @@ class CreateApplicationCommand implements CommandPlugin {
 
   builder(yargs: Argv): Argv {
     return yargs
-      .option('name', {
-        describe: 'Application name',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"applicationName":"app1","repositoryUrl":"https://...","revision":"main","path":"workflows"}\'',
         type: 'string',
         demandOption: true,
       })
-      .option('repo-name', {
-        describe: 'Repository URL',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
-        demandOption: true,
-      })
-      .option('revision', {
-        describe: 'Repository revision',
-        type: 'string',
-        demandOption: true,
-      })
-      .option('path', {
-        describe: 'Path within the repository',
-        type: 'string',
-        demandOption: true,
       })
       .option('json', {
         describe: 'Output as JSON',
@@ -128,18 +126,12 @@ class CreateApplicationCommand implements CommandPlugin {
   }
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
-    const body = {
-      applicationName: args.name as string,
-      repositoryUrl: args.repoName as string,
-      revision: args.revision as string,
-      path: args.path as string,
-    };
-
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would create application "${body.applicationName}"`);
+      logger.info(`[Dry Run] Would create application with body: ${args.body}`);
       return;
     }
 
+    const { body } = parseSdkParams(args);
     const result = await createApplication(body);
 
     if (!result.success) {
@@ -167,16 +159,13 @@ class UpdateApplicationCommand implements CommandPlugin {
         type: 'string',
         demandOption: true,
       })
-      .option('repo-name', {
-        describe: 'Repository URL',
+      .option('body', {
+        describe: 'Request body (JSON), e.g. \'{"repositoryUrl":"https://...","revision":"develop"}\'',
         type: 'string',
+        demandOption: true,
       })
-      .option('revision', {
-        describe: 'Repository revision',
-        type: 'string',
-      })
-      .option('path', {
-        describe: 'Path within the repository',
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
         type: 'string',
       })
       .option('json', {
@@ -188,16 +177,13 @@ class UpdateApplicationCommand implements CommandPlugin {
 
   async run(args: ArgumentsCamelCase<any>): Promise<void> {
     const name = args.name as string;
-    const body: any = {};
-    if (args.repoName) body.repositoryUrl = args.repoName;
-    if (args.revision) body.revision = args.revision;
-    if (args.path) body.path = args.path;
 
     if (args.dryRun) {
-      logger.info(`[Dry Run] Would update application ${name}`);
+      logger.info(`[Dry Run] Would update application ${name} with body: ${args.body}`);
       return;
     }
 
+    const { body } = parseSdkParams(args);
     const result = await updateApplication(name, body);
 
     if (!result.success) {
@@ -224,6 +210,10 @@ class DeleteApplicationCommand implements CommandPlugin {
         describe: 'Application name',
         type: 'string',
         demandOption: true,
+      })
+      .option('headers', {
+        describe: 'Header parameters (JSON)',
+        type: 'string',
       })
       .option('force', {
         describe: 'Skip confirmation warning',

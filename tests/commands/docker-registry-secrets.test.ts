@@ -75,7 +75,7 @@ describe('docker-registry-secrets commands', () => {
 
     it('shows dry-run message and does not call API', async () => {
       await cmd.run({
-        name: 'my-secret', server: 'docker.io', username: 'user', password: 'pass',
+        body: '{"name":"my-secret","data":{".dockerconfigjson":"..."}}',
         dryRun: true, json: false, _: [], $0: '',
       } as any);
 
@@ -90,7 +90,7 @@ describe('docker-registry-secrets commands', () => {
       });
 
       await cmd.run({
-        name: 'my-secret', server: 'docker.io', username: 'user', password: 'pass',
+        body: '{"name":"my-secret","data":{".dockerconfigjson":"..."}}',
         dryRun: false, json: false, _: [], $0: '',
       } as any);
 
