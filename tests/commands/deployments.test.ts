@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the API layer
-vi.mock('../api/deployments.js', () => ({
+vi.mock('../../src/api/deployments.js', () => ({
   listDeployments: vi.fn(),
   getDeployment: vi.fn(),
   createDeployment: vi.fn(),
@@ -10,7 +10,7 @@ vi.mock('../api/deployments.js', () => ({
 }));
 
 // Mock table formatter to capture output
-vi.mock('../utils/table-formatter.js', () => ({
+vi.mock('../../src/utils/table-formatter.js', () => ({
   formatTable: vi.fn(),
 }));
 
@@ -20,10 +20,10 @@ import {
   createDeployment,
   updateDeployment,
   deleteDeployment,
-} from '../api/deployments.js';
-import { formatTable } from '../utils/table-formatter.js';
-import { logger } from '../utils/logger.js';
-import commands from './deployments.js';
+} from '../../src/api/deployments.js';
+import { formatTable } from '../../src/utils/table-formatter.js';
+import { logger } from '../../src/utils/logger.js';
+import commands from '../../src/commands/deployments.js';
 
 const mockListDeployments = vi.mocked(listDeployments);
 const mockGetDeployment = vi.mocked(getDeployment);

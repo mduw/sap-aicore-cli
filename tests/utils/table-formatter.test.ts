@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { formatTable, type Column } from './table-formatter.js';
+import { formatTable, type Column } from '../../src/utils/table-formatter.js';
 
 describe('formatTable', () => {
   let output: string[];

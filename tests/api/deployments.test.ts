@@ -23,7 +23,7 @@ import {
   createDeployment,
   updateDeployment,
   deleteDeployment,
-} from './deployments.js';
+} from '../../src/api/deployments.js';
 
 // Access the shared mock execute function
 const mockExecute = (await import('@sap-ai-sdk/ai-api') as any).__mockExecute;

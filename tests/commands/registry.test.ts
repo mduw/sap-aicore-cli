@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getCommandNames, getCommand, getCommandMetadata } from './index.js';
+import { getCommandNames, getCommand, getCommandMetadata } from '../../src/commands/index.js';
 
 describe('command registry', () => {
   const allExpectedCommands = [

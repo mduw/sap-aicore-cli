@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatApiError } from './api-error.js';
+import { formatApiError } from '../../src/utils/api-error.js';
 
 describe('formatApiError', () => {
   it('extracts message from standard Error', () => {
