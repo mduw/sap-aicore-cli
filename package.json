@@ -1,7 +1,7 @@
 {
-  "name": "sap-ai-core-cli",
-  "version": "0.0.2",
-  "description": "CLI helper for SAP AI Core - manage prompt templates, scenarios, and AI resources",
+  "name": "sap-aicore-cli",
+  "version": "0.0.0",
+  "description": "CLI for SAP AI Core - manage deployments, executions, configurations, prompt templates, secrets, and AI resources from the terminal",
   "type": "module",
   "bin": {
     "saic-cli": "./bin/index.js"
@@ -26,10 +26,18 @@
   "keywords": [
     "sap",
     "ai core",
+    "sap ai core",
+    "cli",
     "prompt registry",
-    "cli"
+    "deployments",
+    "executions",
+    "configurations",
+    "secrets",
+    "foundation models",
+    "generative ai",
+    "saic-cli"
   ],
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@sap-ai-sdk/ai-api": "^2.8.0",
     "@sap-ai-sdk/prompt-registry": "^2.8.0",
