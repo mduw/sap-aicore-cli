@@ -11,6 +11,8 @@ import type { CommandPlugin } from '../types/command';
 interface CommandMetadata {
   name: string;
   description: string;
+  group: string;
+  usage?: string;
   loader: () => Promise<{ default: CommandPlugin }>;
 }
 
@@ -37,44 +39,242 @@ const commandRegistry: CommandMetadata[] = [
   {
     name: CommandNames.INSTALL,
     description: 'Build and install CLI globally (for local development)',
+    group: 'Setup',
     loader: () => import('./install')
   },
   {
     name: CommandNames.UNINSTALL,
     description: 'Remove CLI from global installation',
+    group: 'Setup',
     loader: () => import('./uninstall')
   },
   {
     name: CommandNames.SETUP,
     description: 'Interactive setup wizard for AI Core configuration',
+    group: 'Setup',
     loader: () => import('./setup')
   },
   {
     name: CommandNames.LIST_SCENARIOS,
     description: 'List all available scenarios in the registry',
+    group: 'Prompt Templates',
     loader: () => import('./list-scenarios')
   },
   {
     name: CommandNames.LIST_TEMPLATES,
     description: 'List prompt templates (all or by scenario)',
+    group: 'Prompt Templates',
     loader: () => import('./list-templates')
   },
   {
     name: CommandNames.DELETE,
     description: 'Delete prompt templates (by scenario or specific template)',
+    group: 'Prompt Templates',
     loader: () => import('./delete')
   },
   {
     name: CommandNames.CREATE_PROMPT,
     description: 'Create a new prompt template from YAML config',
+    group: 'Prompt Templates',
     loader: () => import('./create-prompt')
   },
   {
     name: CommandNames.GENERATE_TEMPLATE,
     description: 'Generate a prompt template from OpenAPI spec',
+    group: 'Prompt Templates',
     loader: () => import('./generate-template')
   }
 ];
+
+interface EntityModuleDefinition {
+  group: string;
+  commands: Array<{ name: string; description: string; usage?: string }>;
+  loader: () => Promise<{ default: CommandPlugin[] }>;
+}
+
+const entityModules: EntityModuleDefinition[] = [
+  {
+    group: 'Deployments',
+    commands: [
+      { name: 'list-deployments', description: 'List deployments' },
+      { name: 'get-deployment', description: 'Get deployment details', usage: 'get-deployment <id>' },
+      { name: 'create-deployment', description: 'Create a new deployment' },
+      { name: 'update-deployment', description: 'Update a deployment (e.g. stop/start)', usage: 'update-deployment <id>' },
+      { name: 'delete-deployment', description: 'Delete a deployment', usage: 'delete-deployment <id>' },
+    ],
+    loader: () => import('./deployments'),
+  },
+  {
+    group: 'Executions',
+    commands: [
+      { name: 'list-executions', description: 'List executions' },
+      { name: 'get-execution', description: 'Get execution details', usage: 'get-execution <id>' },
+      { name: 'create-execution', description: 'Create a new execution' },
+      { name: 'update-execution', description: 'Update an execution', usage: 'update-execution <id>' },
+      { name: 'delete-execution', description: 'Delete an execution', usage: 'delete-execution <id>' },
+    ],
+    loader: () => import('./executions'),
+  },
+  {
+    group: 'Configurations',
+    commands: [
+      { name: 'list-configurations', description: 'List configurations' },
+      { name: 'get-configuration', description: 'Get configuration details', usage: 'get-configuration <id>' },
+      { name: 'create-configuration', description: 'Create a new configuration' },
+    ],
+    loader: () => import('./configurations'),
+  },
+  {
+    group: 'Scenarios & Models',
+    commands: [
+      { name: 'get-scenario', description: 'Get scenario details', usage: 'get-scenario <id>' },
+      { name: 'list-scenario-versions', description: 'List versions of a scenario' },
+      { name: 'list-executables', description: 'List executables for a scenario' },
+      { name: 'get-executable', description: 'Get executable details', usage: 'get-executable <id>' },
+      { name: 'list-models', description: 'List models for a scenario' },
+    ],
+    loader: () => import('./scenarios-extended'),
+  },
+  {
+    group: 'Artifacts',
+    commands: [
+      { name: 'list-artifacts', description: 'List artifacts' },
+      { name: 'get-artifact', description: 'Get artifact details', usage: 'get-artifact <id>' },
+      { name: 'create-artifact', description: 'Create a new artifact' },
+    ],
+    loader: () => import('./artifacts'),
+  },
+  {
+    group: 'Execution Schedules',
+    commands: [
+      { name: 'list-execution-schedules', description: 'List execution schedules' },
+      { name: 'get-execution-schedule', description: 'Get execution schedule details', usage: 'get-execution-schedule <id>' },
+      { name: 'create-execution-schedule', description: 'Create a new execution schedule' },
+      { name: 'update-execution-schedule', description: 'Update an execution schedule', usage: 'update-execution-schedule <id>' },
+      { name: 'delete-execution-schedule', description: 'Delete an execution schedule', usage: 'delete-execution-schedule <id>' },
+    ],
+    loader: () => import('./execution-schedules'),
+  },
+  {
+    group: 'Metrics',
+    commands: [
+      { name: 'list-metrics', description: 'List metrics' },
+      { name: 'delete-metrics', description: 'Delete metrics for an execution' },
+    ],
+    loader: () => import('./metrics'),
+  },
+  {
+    group: 'Meta',
+    commands: [
+      { name: 'get-meta', description: 'Get AI Core service metadata and capabilities' },
+    ],
+    loader: () => import('./meta'),
+  },
+  {
+    group: 'Dataset Files',
+    commands: [
+      { name: 'upload-dataset-file', description: 'Upload a file to dataset storage' },
+      { name: 'get-dataset-file', description: 'Download a file from dataset storage' },
+      { name: 'delete-dataset-file', description: 'Delete a file from dataset storage' },
+    ],
+    loader: () => import('./dataset-files'),
+  },
+  {
+    group: 'Repositories',
+    commands: [
+      { name: 'list-repositories', description: 'List git repositories' },
+      { name: 'get-repository', description: 'Get repository details', usage: 'get-repository <name>' },
+      { name: 'create-repository', description: 'Onboard a git repository' },
+      { name: 'update-repository', description: 'Update repository credentials', usage: 'update-repository <name>' },
+      { name: 'delete-repository', description: 'Delete a repository', usage: 'delete-repository <name>' },
+    ],
+    loader: () => import('./repositories'),
+  },
+  {
+    group: 'Applications',
+    commands: [
+      { name: 'list-applications', description: 'List ArgoCD applications' },
+      { name: 'get-application', description: 'Get application details', usage: 'get-application <name>' },
+      { name: 'create-application', description: 'Create an ArgoCD application' },
+      { name: 'update-application', description: 'Update an application', usage: 'update-application <name>' },
+      { name: 'delete-application', description: 'Delete an application', usage: 'delete-application <name>' },
+    ],
+    loader: () => import('./applications'),
+  },
+  {
+    group: 'Docker Registry Secrets',
+    commands: [
+      { name: 'list-docker-secrets', description: 'List Docker registry secrets' },
+      { name: 'create-docker-secret', description: 'Create a Docker registry secret' },
+      { name: 'update-docker-secret', description: 'Update a Docker registry secret', usage: 'update-docker-secret <name>' },
+      { name: 'delete-docker-secret', description: 'Delete a Docker registry secret', usage: 'delete-docker-secret <name>' },
+    ],
+    loader: () => import('./docker-registry-secrets'),
+  },
+  {
+    group: 'Object Store Secrets',
+    commands: [
+      { name: 'list-object-store-secrets', description: 'List object store secrets' },
+      { name: 'create-object-store-secret', description: 'Create an object store secret' },
+      { name: 'update-object-store-secret', description: 'Update an object store secret', usage: 'update-object-store-secret <name>' },
+      { name: 'delete-object-store-secret', description: 'Delete an object store secret', usage: 'delete-object-store-secret <name>' },
+    ],
+    loader: () => import('./object-store-secrets'),
+  },
+  {
+    group: 'Generic Secrets',
+    commands: [
+      { name: 'list-secrets', description: 'List generic secrets' },
+      { name: 'get-secret', description: 'Get generic secret details', usage: 'get-secret <name>' },
+      { name: 'create-secret', description: 'Create a generic secret' },
+      { name: 'update-secret', description: 'Update a generic secret', usage: 'update-secret <name>' },
+      { name: 'delete-secret', description: 'Delete a generic secret', usage: 'delete-secret <name>' },
+    ],
+    loader: () => import('./generic-secrets'),
+  },
+  {
+    group: 'Resource Groups',
+    commands: [
+      { name: 'list-resource-groups', description: 'List resource groups' },
+      { name: 'get-resource-group', description: 'Get resource group details', usage: 'get-resource-group <id>' },
+      { name: 'create-resource-group', description: 'Create a resource group' },
+      { name: 'update-resource-group', description: 'Update a resource group', usage: 'update-resource-group <id>' },
+      { name: 'delete-resource-group', description: 'Delete a resource group', usage: 'delete-resource-group <id>' },
+    ],
+    loader: () => import('./resource-groups'),
+  },
+  {
+    group: 'Services',
+    commands: [
+      { name: 'list-services', description: 'List AI Core services' },
+      { name: 'get-service', description: 'Get service details', usage: 'get-service <name>' },
+    ],
+    loader: () => import('./services'),
+  },
+];
+
+function registerEntityModules(): void {
+  for (const mod of entityModules) {
+    for (const cmd of mod.commands) {
+      commandRegistry.push({
+        name: cmd.name,
+        description: cmd.description,
+        group: mod.group,
+        usage: cmd.usage,
+        loader: async () => {
+          const module = await mod.loader();
+          const plugin = module.default.find((c: CommandPlugin) => c.name === cmd.name);
+          if (!plugin) {
+            throw new Error(`Command "${cmd.name}" not found in entity module`);
+          }
+          return { default: plugin };
+        },
+      });
+    }
+  }
+}
+
+registerEntityModules();
 
 /**
  * Get all command names (fast, no loading)
@@ -86,8 +286,8 @@ export function getCommandNames(): string[] {
 /**
  * Get all command metadata (fast, for help display)
  */
-export function getCommandMetadata(): Array<{ name: string; description: string }> {
-  return commandRegistry.map(({ name, description }) => ({ name, description }));
+export function getCommandMetadata(): Array<{ name: string; description: string; group: string; usage?: string }> {
+  return commandRegistry.map(({ name, description, group, usage }) => ({ name, description, group, usage }));
 }
 
 /**

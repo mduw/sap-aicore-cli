@@ -7,3 +7,4 @@
 export type * from './common';
 export type * from './template';
 export type * from './display';
+export type * from './ai-core';
