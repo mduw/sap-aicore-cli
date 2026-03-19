@@ -37,6 +37,14 @@
     "generative ai",
     "saic-cli"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mduw/sap-aicore-cli"
+  },
+  "homepage": "https://github.com/mduw/sap-aicore-cli#readme",
+  "bugs": {
+    "url": "https://github.com/mduw/sap-aicore-cli/issues"
+  },
   "license": "MIT",
   "dependencies": {
     "@sap-ai-sdk/ai-api": "^2.8.0",
